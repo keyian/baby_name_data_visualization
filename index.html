@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Baby Names</title>
+        <link href="main.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="d3/d3.js"></script>
+    </head>
+    <body>
+      <a href="#"><h2 id="legLink" onclick="legTime()">Legend</h2></a>
+      <div id ="legendo">
+        <div id="legend">
+          <div id="babies">
+          <p>Most Popular<b> Asian American / Pacific Islander </b>Baby Name First Letter:</p>
+          <img src ="babyImg/aPIB.png" />
+          <p>Most Popular <b>Black / Non-Hispanic </b>Baby Name First Letter:</p>
+          <img src ="babyImg/bNHB.png" />
+          <p>Most Popular <b>Hispanic</b> Baby Name First Letter:</p>
+          <img src ="babyImg/hB.png" />
+          <p>Most Popular <b>White / Non-Hispanic</b> Baby Name First Letter:</p>
+          <img src ="babyImg/wNHB.png" />
+        </div>
+        <div id="styl">
+          <p>The <b>color</b> of each letter is determined by the following RGBA scheme:</p>
+          <p><b>Red</b> is the amount of White / Non-Hispanic babies with that first letter for their name,
+            modulo 255</p>
+          <p>That calculation is repeated for <b>green</b> and <b>blue</b> with Hispanic and Black / Non-Hispanic Babies, respectively</p>
+          <p>The <b>alpha level</b> is the amount of Asian / Pacific-Islanders with that first letter for their name, modulo 255,
+            then divided by 255, so that it is a number between 0 and 1.</p>
+          <p>The <b>size</b> of each letter is proportional to the amount of babies in that page section (ie: total,
+          males, females) with that first letter for their name</p>
+          </div>
+        </div>
+      </div>
+      <div id="notLeg">
+        <h1 id="title">the most common first letters of new york city baby names in 2011</h1>
+        <ul>
+        <li id="tot"><a href="#total"><h1 class="displayer" onclick="showOne(0)">all names</h1></a></li>
+        <li id="fem"><a href="#female"><h1 class="displayer" onclick="showOne(1)">female names</h1></a></li>
+        <li id="mal"><a href="#male"><h1 class="displayer" onclick="showOne(2)">male names</h1></a></li>
+      </ul>
+        <div id="total">
+        </div>
+
+        <div id="female">
+        </div>
+
+        <div id="male">
+        </div>
+      </div>
+        <script type="text/javascript">
+          //most common first letter (.substring(0, 1))
+          //because no associative array, make one array of just alphabet
+          //make a separate one for females and males
+          //for each row, add the count of the name to the letter's index in the total array
+          //then do the same for either male or female array
+          var alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+          var total = new Array(26);
+          var female = new Array(26);
+          var male = new Array(26);
+          //each ethnicity's letter stats
+          var aPITotal = new Array(26);
+          var aPIFemale = new Array(26);
+          var aPIMale = new Array(26);
+
+          var bNHTotal = new Array(26);
+          var bNHFemale = new Array(26);
+          var bNHMale = new Array(26);
+
+          var hTotal = new Array(26);
+          var hFemale = new Array(26);
+          var hMale = new Array(26);
+
+          var wNHTotal = new Array(26);
+          var wNHFemale = new Array(26);
+          var wNHMale = new Array(26);
+
+          var index = 0;
+
+          function giveWidth() {
+            var w = window.innerWidth;
+            w = (.75*w)/2;
+            w += w*((Math.random()-.5));
+            return w;
+          }
+
+          function giveHeight(i) {
+            var h = .75*window.innerHeight;
+            h = (.75*h)/2;
+            h += h*((Math.random()-.5));
+            return h;
+            // var space = ((i+1)*.11);
+            // -(space*window.innerHeight);
+            // h= (h/2)
+            // h += h*(1.2*(Math.random()-.5));
+            // return h;
+          }
+
+          function giveColor(aPI, bNH, hT, wNH, index) {
+            //color broken down as: wNHTotal = red, hT =green, bNH= blue, aPI= alpha; therefore rgba
+            //doesn't need to be a specific kind of array, you're just returning a color tag
+            var col="rgba(";
+            col+=(wNH[index]%255)+", ";
+            col+=(hT[index]%255)+", ";
+            col+=(bNH[index]%255)+", ";
+            col+=((bNH[index]%255)/255)+");";
+            return col;
+          }
+          var ids = ["total", "female", "male"];
+          d3.csv("babyNames.csv", function (data) {
+
+            data.forEach(function(d){
+              //make sure count and rank are recognized as ints
+              d.CNT = +d.CNT;
+              d.RNK = +d.RNK;
+              index = alphabet.indexOf(d.NM.substring(0, 1).toLowerCase());
+              //don't use += on an undefined element
+              if(total[index]==null){
+                total[index] = 0;
+                male[index]= 0;
+                female[index]= 0;
+
+                aPITotal[index] = 0;
+                aPIFemale[index] = 0;
+                aPIMale[index] = 0;
+
+                bNHTotal[index] = 0;
+                bNHFemale[index] = 0;
+                bNHMale[index] = 0;
+
+                hTotal[index] = 0;
+                hFemale[index] = 0;
+                hMale[index] = 0;
+
+                wNHTotal[index] = 0;
+                wNHFemale[index] = 0;
+                wNHMale[index] = 0;
+
+              }
+              total[index] += d.CNT;
+              if(d.GNDR=="FEMALE") {
+                female[index] += d.CNT;
+                if (d.ETHCTY == "ASIAN AND PACIFIC ISLANDER") {
+                  aPITotal[index] += d.CNT;
+                  aPIFemale[index] += d.CNT;
+                } else if (d.ETHCTY == "BLACK NON HISPANIC"){
+                  bNHTotal[index] += d.CNT;
+                  bNHFemale[index] += d.CNT;
+                } else if (d.ETHCTY == "HISPANIC"){
+                  hTotal[index] += d.CNT;
+                  hFemale[index] += d.CNT;
+                } else if(d.ETHCTY == "WHITE NON HISPANIC") {
+                  wNHTotal[index] += d.CNT;
+                  wNHFemale[index] += d.CNT;
+                }
+              } else if (d.GNDR=="MALE") {
+                male[index] += d.CNT;
+                if (d.ETHCTY == "ASIAN AND PACIFIC ISLANDER") {
+                  aPITotal[index] += d.CNT;
+                  aPIMale[index] += d.CNT;
+                } else if (d.ETHCTY == "BLACK NON HISPANIC"){
+                  bNHTotal[index] += d.CNT;
+                  bNHMale[index] += d.CNT;
+                } else if (d.ETHCTY == "HISPANIC"){
+                  hTotal[index] += d.CNT;
+                  hMale[index] += d.CNT;
+                } else if(d.ETHCTY == "WHITE NON HISPANIC") {
+                  wNHTotal[index] += d.CNT;
+                  wNHMale[index] += d.CNT;
+                }
+              }
+
+            })
+          // })
+            var cnts = [total, female, male];
+            var ethCnts = [aPITotal, aPIFemale, aPIMale, bNHTotal, bNHFemale, bNHMale, hTotal, hFemale, hMale, wNHTotal, wNHFemale, wNHMale];
+          // })
+            var imageLinks = ["babyImg/aPIB.png", "babyImg/bNHB.png", "babyImg/hB.png", "babyImg/wNHB.png"]
+            var pText = "";
+            var oCnt = 0;
+            var notO = false;
+            var notI = false;
+            var useThisLet = "";
+            var iCnt = 0;
+            for(var i=0; i<cnts.length; i++){
+              notO = false;
+              notI = false;
+              oCnt = 0;
+              d3.select("#"+ids[i]).selectAll("p")
+              .data(cnts[i])
+              .enter()
+              .append("p")
+              .attr("id", function(d) {
+                notI = false;
+                useThisLet = alphabet[cnts[i].indexOf(d)];
+                if((ids[i]=="female")&&(oCnt>0)&&(useThisLet=="o")) {
+                  useThisLet = "z";
+                  notO = true;
+                } else if((ids[i]=="female")&&(useThisLet=="o")) {
+                  oCnt++;
+                } else if((ids[i]=="male")&&(iCnt>0)) {
+                  iCnt++;
+                  if(useThisLet==="i") {
+                  useThisLet = "t";
+                }
+                  notI = true;
+                } else if ((ids[i]=="male")&&(useThisLet=="i")) {
+                  iCnt++;
+                }
+                return (ids[i]+useThisLet);
+              })
+              .text(function(d) {
+                useThisLet = alphabet[cnts[i].indexOf(d)];
+                if ((notO) && (useThisLet=="o")) {
+                  useThisLet = "z";
+                } else if ((notI)&& (iCnt>1)&&(useThisLet=="i")) {
+                  useThisLet = "t";
+                }
+                return useThisLet;
+              })
+              .attr("style", function(d) {
+                if (cnts[i] == 0) {var divi = 50;} else { var divi = 15;}
+                return "font-size:"+Math.ceil(d/divi) +"%; position: fixed; top: "+giveHeight(i)+"px; left: "+giveWidth()+"px; color: "+giveColor(ethCnts[i], ethCnts[3+i], ethCnts[6+i], ethCnts[9+i], cnts[i].indexOf(d));
+              })
+              .attr("class", "letter");
+              for (var j=i; j<ethCnts.length; j+=3) {
+                for(var d=0; d<26; d++) {
+                if((ethCnts[j].indexOf(Math.max.apply(null, ethCnts[j])))==d) {
+                  document.getElementById(ids[i]+alphabet[d]).innerHTML += "<img src='"+imageLinks[Math.floor(j/3)]+"' alt='baby' margin='2px' style= 'text-shadow: 2px 2px 5px "+giveColor(ethCnts[j%3], ethCnts[j%3+3], ethCnts[j%3+6], ethCnts[j%3+9], d)+"' />";
+                }
+                }
+              }
+            }
+        })
+      var shown = -1;
+      var linkIds=["tot", "fem", "mal"];
+      function showOne(n) {
+        //minimize all
+        if(shown>=0) {
+        document.getElementById(ids[shown]).style.display = "none";
+        document.getElementById(linkIds[shown]).style.background = "none";
+      }
+        if(shown==n) {
+          shown = -1;
+        } else {
+
+          document.getElementById(ids[n]).style.display = "inline";
+          document.getElementById(linkIds[n]).style.background = "white";
+          document.getElementById(ids[n]).style.width = (window.innerWidth)+"px";
+          document.getElementById(ids[n]).style.height = (window.innerHeight)+"px";
+          shown = n;
+        }
+      }
+      var leg = false;
+      function legTime() {
+        if(!leg) {
+          document.getElementById("notLeg").style.display = "none";
+          document.getElementById("legendo").style.display = "inline";
+          document.getElementById("legLink").innerHTML = "Back to data";
+          leg = true;
+        } else {
+          document.getElementById("legendo").style.display = "none";
+          document.getElementById("notLeg").style.display = "inline";
+          document.getElementById("legLink").innerHTML = "Legend";
+          leg = false;
+        }
+
+      }
+
+        </script>
+    </body>
+</html>
